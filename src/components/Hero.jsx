@@ -120,7 +120,7 @@ export default function Hero() {
               transition={{ duration: 0.75, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
               className="text-ink-500 dark:text-ink-300 text-[1.05rem] sm:text-[1.25rem] font-medium"
             >
-              Backend engineer building
+              Fullstack developer building
             </motion.p>
             <motion.p
               initial={{ x: 72, opacity: 0, filter: 'blur(6px)' }}
@@ -128,7 +128,7 @@ export default function Hero() {
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
               className="mt-1 text-ink-500 dark:text-ink-300 text-[1.05rem] sm:text-[1.25rem] font-medium"
             >
-              scalable, event-driven systems.
+              scalable, event-driven systems and delightful user experiences.
             </motion.p>
           </div>
 
