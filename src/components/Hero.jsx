@@ -94,13 +94,13 @@ export default function Hero() {
             <span className="text-ink-500 dark:text-ink-300">Hi, I'm</span>{' '}
             <span className="relative inline-flex items-end">
               <span className="gradient-text">{typedName}</span>
-              <motion.span
+              {/* <motion.span
                 aria-hidden="true"
                 animate={{ opacity: [1, 0.2, 1] }}
                 transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
                 className="mb-[0.08em] ml-1 inline-block h-[0.86em] w-[2px]
                            rounded-full bg-accent/80"
-              />
+              /> */}
               {/* Animated underline */}
               <motion.span
                 initial={{ scaleX: 0 }}
