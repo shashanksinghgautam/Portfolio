@@ -1,82 +1,98 @@
-import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
-import SectionHeading from './SectionHeading.jsx';
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
 import { about, profile } from '../data/portfolio.js';
 
+/* ----------------------------------------------------------------
+   About - asymmetric editorial layout with glowing card.
+---------------------------------------------------------------- */
+
 const reveal = {
-  hidden: { opacity: 0, y: 24, filter: 'blur(6px)' },
+  hidden: { opacity: 0, y: 40, filter: 'blur(8px)' },
   visible: (i = 0) => ({
     opacity: 1,
     y: 0,
     filter: 'blur(0px)',
-    transition: { duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.9, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] },
   }),
 };
 
 export default function About() {
-  return (
-    <section id="about" className="py-28 sm:py-36">
-      <div className="container-page grid gap-14 lg:grid-cols-12">
-        <div className="lg:col-span-5">
-          <SectionHeading
-            eyebrow="About"
-            title="Backend craft, with a product mindset."
-            description="I care about systems that scale, codebases that stay readable, and metrics that prove impact."
-          />
-        </div>
-        <div className="lg:col-span-7 space-y-5">
-          {about.paragraphs.map((p, i) => (
-            <motion.p
-              key={i}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-80px' }}
-              variants={reveal}
-              custom={i}
-              className="text-base sm:text-lg leading-relaxed text-ink-600 dark:text-ink-200"
-            >
-              {p}
-            </motion.p>
-          ))}
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: '-100px' });
 
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-80px' }}
-            variants={reveal}
-            custom={3}
-            whileHover={{ y: -4, transition: { type: 'spring', stiffness: 300 } }}
-            className="group relative overflow-hidden rounded-2xl border border-ink-100 dark:border-white/10
-                       bg-white/70 dark:bg-ink-800/50 backdrop-blur-sm shadow-card
-                       mt-8 p-7 transition-shadow duration-300 hover:shadow-glow"
-          >
-            {/* Hover accent ring */}
-            <div className="pointer-events-none absolute inset-0 rounded-[inherit]
-                            ring-1 ring-inset ring-transparent transition-[box-shadow] duration-300
-                            group-hover:ring-accent/25" />
-            <div className="relative flex items-center gap-2 text-sm font-semibold text-accent">
-              <Sparkles size={16} /> What I bring
-            </div>
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-              {about.highlights.map((h, i) => (
-                <motion.li
-                  key={h}
-                  initial={{ opacity: 0, x: -12 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3 + i * 0.05 }}
-                  className="flex items-start gap-2 text-sm text-ink-600 dark:text-ink-200"
+  return (
+    <section id="about" ref={sectionRef} className="py-32 sm:py-40">
+      <div className="container-wide">
+        <motion.p
+          initial={{ opacity: 0, x: -20 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="label mb-4"
+        >
+          About
+        </motion.p>
+
+        <div className="grid gap-16 lg:grid-cols-[1.3fr_1fr] lg:gap-20">
+          {/* Left */}
+          <div>
+            <motion.h2
+              initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }}
+              variants={reveal} custom={1}
+              className="text-headline max-w-lg"
+            >
+              I build systems that{' '}
+              <span className="gradient-text">work reliably</span> - at scale, without drama.
+            </motion.h2>
+
+            <div className="mt-10 space-y-5">
+              {about.paragraphs.map((p, i) => (
+                <motion.p
+                  key={i}
+                  initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }}
+                  variants={reveal} custom={i + 2}
+                  className="text-base leading-relaxed text-secondary"
                 >
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                  {h}
-                </motion.li>
+                  {p}
+                </motion.p>
               ))}
-            </ul>
-            <div className="mt-6 flex flex-wrap items-center gap-2 text-xs text-ink-500 dark:text-ink-300">
-              <span className="chip">{profile.yearsExperience}+ yrs experience</span>
-              <span className="chip">Java · Spring Boot</span>
-              <span className="chip">Microservices</span>
-              <span className="chip">AWS</span>
+            </div>
+          </div>
+
+          {/* Right - glowing card */}
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }}
+            variants={reveal} custom={3}
+            className="lg:pt-12"
+          >
+            <div className="card-glow p-8">
+              <p className="label mb-6">What I bring</p>
+              <ul className="space-y-4">
+                {about.highlights.map((h, i) => (
+                  <motion.li
+                    key={h}
+                    initial={{ opacity: 0, x: -16 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.4 + i * 0.08, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex items-start gap-3 text-sm text-secondary"
+                  >
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_6px_rgba(0,229,160,0.6)]" />
+                    {h}
+                  </motion.li>
+                ))}
+              </ul>
+
+              <div className="mt-8 pt-6 border-t border-[var(--border)] flex flex-wrap gap-3">
+                <span className="rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-[11px] font-mono text-accent">
+                  {profile.yearsExperience}+ years
+                </span>
+                <span className="rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-[11px] font-mono text-accent">
+                  6+ platforms
+                </span>
+                <span className="rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-[11px] font-mono text-accent">
+                  3× awarded
+                </span>
+              </div>
             </div>
           </motion.div>
         </div>

@@ -1,197 +1,276 @@
-import { useEffect, useState } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Download, MapPin, Terminal } from 'lucide-react';
+import { useRef, useEffect, useState, useMemo } from 'react';
+import { motion, useScroll, useTransform, useInView, useSpring, useMotionValue } from 'framer-motion';
+import { ArrowDown, ArrowRight } from 'lucide-react';
 import { profile } from '../data/portfolio.js';
+import Magnetic from './Magnetic.jsx';
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 30, filter: 'blur(8px)' },
-  show: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.7, delay: 0.15 + i * 0.1, ease: [0.22, 1, 0.36, 1] },
-  }),
-};
+/* ================================================================
+   Hero - Cinematic immersive entrance.
+   - Character-by-character text reveal with stagger
+   - Animated counter for metrics
+   - Parallax depth layers
+   - Magnetic buttons
+   - Typing cursor on role
+   - Glitch on hover (name)
+================================================================ */
 
-function CountUp({ value }) {
-  return <span>{value}</span>;
+// Text scramble effect hook
+function useTextScramble(text, inView, delay = 0) {
+  const [displayed, setDisplayed] = useState('');
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*';
+
+  useEffect(() => {
+    if (!inView) return;
+    let frame = 0;
+    const totalFrames = text.length * 3;
+    const timeout = setTimeout(() => {
+      const interval = setInterval(() => {
+        frame++;
+        const progress = frame / totalFrames;
+        const revealedLen = Math.floor(progress * text.length);
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+          if (i < revealedLen) {
+            result += text[i];
+          } else if (i === revealedLen) {
+            result += chars[Math.floor(Math.random() * chars.length)];
+          } else {
+            result += text[i] === ' ' ? ' ' : chars[Math.floor(Math.random() * chars.length)];
+          }
+        }
+        setDisplayed(result);
+        if (frame >= totalFrames) {
+          setDisplayed(text);
+          clearInterval(interval);
+        }
+      }, 30);
+      return () => clearInterval(interval);
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, [inView, text, delay]);
+
+  return displayed;
 }
 
-/* Geometric accent behind hero title - abstract circuit node pattern */
-function HeroAccent() {
+// Animated counter hook
+function AnimatedCounter({ value, suffix = '', duration = 2000, delay = 0 }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const [display, setDisplay] = useState('0');
+
+  useEffect(() => {
+    if (!isInView) return;
+    const numericVal = parseInt(value.replace(/[^0-9]/g, ''), 10);
+    if (isNaN(numericVal)) { setDisplay(value); return; }
+
+    const timeout = setTimeout(() => {
+      const startTime = Date.now();
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.floor(eased * numericVal);
+        setDisplay(`${current}${suffix}`);
+        if (progress < 1) requestAnimationFrame(animate);
+        else setDisplay(value);
+      };
+      animate();
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, [isInView, value, duration, delay, suffix]);
+
+  return <span ref={ref}>{display}</span>;
+}
+
+// Character reveal component
+function CharReveal({ text, className, delay = 0 }) {
   return (
-    <div className="pointer-events-none absolute -right-16 -top-12 h-[340px] w-[340px] opacity-[0.06] dark:opacity-[0.04]">
-      <svg viewBox="0 0 340 340" fill="none" className="h-full w-full">
-        <circle cx="170" cy="170" r="140" stroke="currentColor" strokeWidth="0.5" strokeDasharray="8 6" />
-        <circle cx="170" cy="170" r="90" stroke="currentColor" strokeWidth="0.5" />
-        <circle cx="170" cy="170" r="40" stroke="currentColor" strokeWidth="0.8" />
-        <circle cx="170" cy="30" r="4" fill="currentColor" />
-        <circle cx="310" cy="170" r="4" fill="currentColor" />
-        <circle cx="170" cy="310" r="4" fill="currentColor" />
-        <circle cx="30" cy="170" r="4" fill="currentColor" />
-        <line x1="170" y1="30" x2="170" y2="130" stroke="currentColor" strokeWidth="0.4" />
-        <line x1="310" y1="170" x2="210" y2="170" stroke="currentColor" strokeWidth="0.4" />
-        <line x1="170" y1="310" x2="170" y2="210" stroke="currentColor" strokeWidth="0.4" />
-        <line x1="30" y1="170" x2="130" y2="170" stroke="currentColor" strokeWidth="0.4" />
-      </svg>
-    </div>
+    <motion.span className={`inline-block ${className}`}>
+      {text.split('').map((char, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0, y: 40, rotateX: -90 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0 }}
+          transition={{
+            duration: 0.6,
+            delay: delay + i * 0.04,
+            ease: [0.16, 1, 0.3, 1],
+          }}
+          className="inline-block"
+          style={{ transformOrigin: 'bottom' }}
+        >
+          {char === ' ' ? '\u00A0' : char}
+        </motion.span>
+      ))}
+    </motion.span>
   );
 }
 
+const reveal = {
+  hidden: { opacity: 0, y: 40, filter: 'blur(12px)' },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: {
+      duration: 1,
+      delay: 0.4 + i * 0.15,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  }),
+};
+
 export default function Hero() {
-  const { scrollYProgress } = useScroll();
-  const yParallax = useTransform(scrollYProgress, [0, 0.3], [0, -50]);
-  const opacityFade = useTransform(scrollYProgress, [0, 0.25], [1, 0.3]);
-  const heroName = profile.name.split(' ')[0];
-  const [typedName, setTypedName] = useState('');
-  const [typingDone, setTypingDone] = useState(false);
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true });
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end start'],
+  });
+  const yParallax = useTransform(scrollYProgress, [0, 1], [0, -150]);
+  const opacityFade = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.6], [1, 0.92]);
 
-  useEffect(() => {
-    let i = 0;
-    let intervalId;
-    const startTimeout = setTimeout(() => {
-      intervalId = setInterval(() => {
-        i += 1;
-        setTypedName(heroName.slice(0, i));
-        if (i >= heroName.length) {
-          clearInterval(intervalId);
-          setTypingDone(true);
-        }
-      }, 95);
-    }, 260);
-
-    return () => {
-      clearTimeout(startTimeout);
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [heroName]);
+  const roleText = useTextScramble('Software Engineer', isInView, 1200);
 
   return (
-    <section id="top" className="relative pt-36 pb-28 sm:pt-44 sm:pb-36">
-      <motion.div style={{ y: yParallax, opacity: opacityFade }} className="container-page">
+    <section
+      ref={sectionRef}
+      id="top"
+      className="relative flex min-h-screen flex-col justify-between overflow-hidden px-6 sm:px-8 lg:px-12 pt-28 pb-10"
+    >
+      {/* Animated accent beams */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          initial="hidden"
-          animate="show"
-          variants={{ show: { transition: { staggerChildren: 0.06 } } }}
-          className="relative max-w-4xl"
-        >
-          <HeroAccent />
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
+          transition={{ duration: 2, delay: 1, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute top-[18%] left-0 right-0 h-px origin-left bg-gradient-to-r from-transparent via-accent/30 to-transparent"
+        />
+        <motion.div
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
+          transition={{ duration: 2, delay: 1.5, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute top-[55%] left-0 right-0 h-px origin-right bg-gradient-to-r from-transparent via-glow-cyan/15 to-transparent"
+        />
+        <motion.div
+          initial={{ scaleY: 0, opacity: 0 }}
+          animate={{ scaleY: 1, opacity: 0.5 }}
+          transition={{ duration: 2.5, delay: 1.8, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute top-0 bottom-0 left-[15%] w-px origin-top bg-gradient-to-b from-accent/10 via-glow-purple/10 to-transparent"
+        />
+      </div>
 
-          <motion.div variants={fadeUp} custom={0} className="chip">
+      <motion.div
+        style={{ y: yParallax, opacity: opacityFade, scale }}
+        className="flex-1 flex flex-col justify-center max-w-[1200px] mx-auto w-full relative"
+      >
+        {/* Status chip */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <span className="inline-flex items-center gap-2.5 rounded-full border border-accent/30 bg-accent/5 px-4 py-2 text-[12px] font-medium tracking-wide text-accent backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
             </span>
             Available for new opportunities
-          </motion.div>
+          </span>
+        </motion.div>
 
-          <motion.h1
-            variants={fadeUp}
-            custom={1}
-            className="mt-8 font-display text-5xl sm:text-6xl lg:text-[5.5rem] font-semibold leading-[1.05]
-                       tracking-tight text-ink-900 dark:text-white"
-          >
-            <span className="text-ink-500 dark:text-ink-300">Hi, I'm</span>{' '}
-            <span className="relative inline-flex items-end">
-              <span className="gradient-text">{typedName}</span>
-              {/* <motion.span
-                aria-hidden="true"
-                animate={{ opacity: [1, 0.2, 1] }}
-                transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
-                className="mb-[0.08em] ml-1 inline-block h-[0.86em] w-[2px]
-                           rounded-full bg-accent/80"
-              /> */}
-              {/* Animated underline */}
-              <motion.span
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: typedName.length >= heroName.length ? 1 : 0 }}
-                transition={{ duration: 0.8, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute -bottom-1.5 left-0 h-[3px] w-full origin-left
-                           bg-gradient-to-r from-accent via-violet-500 to-fuchsia-500 rounded-full"
-              />
-            </span>
-            .
-          </motion.h1>
+        {/* Name - character-by-character reveal */}
+        <h1 className="mt-10 text-display max-w-5xl overflow-hidden">
+          <CharReveal text="SHASHANK" className="gradient-text" delay={0.6} />
+          <br className="sm:hidden" />
+          {' '}
+          <CharReveal text="SINGH" className="text-primary" delay={1.0} />
+        </h1>
 
-          <div className="mt-4 max-w-3xl overflow-hidden">
-            <motion.p
-              initial={{ x: -72, opacity: 0, filter: 'blur(6px)' }}
-              animate={typingDone ? { x: 0, opacity: 1, filter: 'blur(0px)' } : { x: -72, opacity: 0, filter: 'blur(6px)' }}
-              transition={{ duration: 0.75, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-              className="text-ink-500 dark:text-ink-300 text-[1.05rem] sm:text-[1.25rem] font-medium"
+        {/* Role with scramble */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 1.2 }}
+          className="mt-6 flex items-center gap-4"
+        >
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: 48 }}
+            transition={{ duration: 0.8, delay: 1.4, ease: [0.16, 1, 0.3, 1] }}
+            className="h-px bg-gradient-to-r from-accent to-transparent"
+          />
+          <p className="text-xl sm:text-2xl font-medium tracking-tight text-secondary font-mono">
+            {roleText}
+            <motion.span
+              animate={{ opacity: [1, 0] }}
+              transition={{ duration: 0.8, repeat: Infinity, repeatType: 'reverse' }}
+              className="text-accent ml-0.5"
             >
-              Fullstack developer building
-            </motion.p>
-            <motion.p
-              initial={{ x: 72, opacity: 0, filter: 'blur(6px)' }}
-              animate={typingDone ? { x: 0, opacity: 1, filter: 'blur(0px)' } : { x: 72, opacity: 0, filter: 'blur(6px)' }}
-              transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-1 text-ink-500 dark:text-ink-300 text-[1.05rem] sm:text-[1.25rem] font-medium"
-            >
-              scalable, event-driven systems and delightful user experiences.
-            </motion.p>
-          </div>
+              |
+            </motion.span>
+          </p>
+        </motion.div>
 
-          <motion.p
-            variants={fadeUp}
-            custom={2}
-            className="mt-8 max-w-2xl text-base sm:text-lg leading-relaxed text-ink-500 dark:text-ink-300"
-          >
-            {profile.blurb}
-          </motion.p>
+        {/* Description */}
+        <motion.p
+          custom={3}
+          initial="hidden"
+          animate="visible"
+          variants={reveal}
+          className="mt-8 max-w-xl text-base sm:text-lg leading-relaxed text-tertiary"
+        >
+          Building scalable backend systems, automation platforms, and enterprise-grade products.{' '}
+          <span className="text-accent font-medium">{profile.yearsExperience}+ years</span>{' '}
+          creating reliable software and business-critical automation.
+        </motion.p>
 
-          <motion.div variants={fadeUp} custom={3} className="mt-10 flex flex-wrap items-center gap-3">
+        {/* Magnetic CTAs */}
+        <motion.div custom={4} initial="hidden" animate="visible" variants={reveal} className="mt-10 flex flex-wrap items-center gap-4">
+          <Magnetic strength={0.2}>
             <a href="#projects" className="btn-primary group">
               View my work
-              <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
             </a>
-            <a href={profile.resumeUrl} download className="btn-ghost">
-              <Download size={16} /> Download Resume
+          </Magnetic>
+          <Magnetic strength={0.2}>
+            <a href={profile.resumeUrl} download className="btn-secondary">
+              Download résumé
             </a>
-          </motion.div>
-
-          <motion.div
-            variants={fadeUp}
-            custom={4}
-            className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-500 dark:text-ink-400"
-          >
-            <span className="inline-flex items-center gap-2">
-              <MapPin size={14} /> {profile.location}
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Terminal size={14} /> {profile.yearsExperience}+ years engineering
-            </span>
-          </motion.div>
+          </Magnetic>
         </motion.div>
+      </motion.div>
 
-        {/* Metrics strip */}
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: '-60px' }}
-          variants={{ show: { transition: { staggerChildren: 0.1 } } }}
-          className="mt-24 grid grid-cols-2 gap-5 sm:grid-cols-4 sm:gap-6"
-        >
-          {profile.metrics.map((m, i) => (
-            <motion.div
-              key={m.label}
-              variants={fadeUp}
-              custom={i}
-              whileHover={{ y: -6, transition: { type: 'spring', stiffness: 400, damping: 15 } }}
-              className="group relative overflow-hidden rounded-2xl border border-ink-100 dark:border-white/10
-                         bg-white/70 dark:bg-ink-800/50 backdrop-blur-sm shadow-card
-                         p-7 transition-shadow duration-300 hover:shadow-glow"
-            >
-              <div className="pointer-events-none absolute inset-0 rounded-[inherit]
-                              ring-1 ring-inset ring-transparent transition-[box-shadow] duration-300
-                              group-hover:ring-accent/25" />
-              <div className="relative font-display text-3xl sm:text-4xl font-bold gradient-text">
-                <CountUp value={m.value} />
+      {/* Bottom metrics with animated counters */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, delay: 1.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-[1200px] mx-auto w-full"
+      >
+        <div className="border-t border-[var(--border)] pt-8 flex flex-wrap items-end justify-between gap-6">
+          <div className="flex flex-wrap gap-10">
+            {profile.metrics.map((m, i) => (
+              <div key={m.label} className="flex flex-col">
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight gradient-text">
+                  <AnimatedCounter value={m.value} delay={2000 + i * 200} />
+                </span>
+                <span className="mt-1 text-[11px] font-mono uppercase tracking-wider text-tertiary">{m.label}</span>
               </div>
-              <div className="relative mt-2.5 text-sm text-ink-500 dark:text-ink-300">{m.label}</div>
+            ))}
+          </div>
+          <Magnetic strength={0.4}>
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="text-accent/60"
+            >
+              <ArrowDown size={18} />
             </motion.div>
-          ))}
-        </motion.div>
+          </Magnetic>
+        </div>
       </motion.div>
     </section>
   );

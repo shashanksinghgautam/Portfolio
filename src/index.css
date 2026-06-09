@@ -4,6 +4,27 @@
 
 :root {
   color-scheme: light dark;
+  --bg: #EEF0F4;
+  --bg-elevated: #E8EAEF;
+  --bg-subtle: #DFE2E9;
+  --border: rgba(0, 0, 0, 0.09);
+  --text-primary: #0C0A09;
+  --text-secondary: #44403C;
+  --text-tertiary: #78716C;
+  --accent: #059669;
+  --accent-glow: rgba(5, 150, 105, 0.22);
+}
+
+.dark {
+  --bg: #0A0A0C;
+  --bg-elevated: #141416;
+  --bg-subtle: #1E1E22;
+  --border: rgba(255, 255, 255, 0.07);
+  --text-primary: #F0F0F0;
+  --text-secondary: #9CA3AF;
+  --text-tertiary: #6B7280;
+  --accent: #00E5A0;
+  --accent-glow: rgba(0, 229, 160, 0.15);
 }
 
 *, *::before, *::after {
@@ -12,70 +33,268 @@
 
 html {
   scroll-behavior: smooth;
+  /* Hide default cursor on desktop when custom cursor is active */
+  cursor: auto;
+}
+
+@media (pointer: fine) {
+  html {
+    cursor: none;
+  }
+  a, button, [role="button"], input, textarea, select {
+    cursor: none;
+  }
 }
 
 body {
-  @apply bg-ink-50 text-ink-700 font-sans antialiased;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
 }
 
-.dark body {
-  @apply bg-ink-900 text-ink-100;
-}
-
-/* Selection */
 ::selection {
-  background: rgba(31, 111, 235, 0.25);
+  background: rgba(0, 229, 160, 0.25);
 }
 
-/* Scrollbar (refined) */
-::-webkit-scrollbar { width: 8px; height: 8px; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(120, 130, 145, 0.25);
+  background: var(--accent);
   border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  opacity: 0.5;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(120, 130, 145, 0.45);
-  background-clip: padding-box;
+
+/* Noise overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ── Comet animations ────────────────────────────────────────── */
+
+/* Horizontal travel - same for all comets */
+@keyframes cometMove {
+  0%   { transform: translateX(-150px) translateY(var(--wig-start, 0px)); opacity: 0; }
+  5%   { opacity: 1; }
+  87%  { opacity: 1; }
+  100% { transform: translateX(calc(100vw + 250px)) translateY(var(--wig-end, 0px)); opacity: 0; }
+}
+
+/* 5 unique wiggle paths - different amplitude & phase */
+@keyframes wiggle1 {
+  0%,100% { transform: translateY(0px); }
+  20%     { transform: translateY(-6px); }
+  50%     { transform: translateY(5px); }
+  75%     { transform: translateY(-3px); }
+}
+@keyframes wiggle2 {
+  0%,100% { transform: translateY(0px); }
+  15%     { transform: translateY(7px); }
+  45%     { transform: translateY(-5px); }
+  70%     { transform: translateY(4px); }
+}
+@keyframes wiggle3 {
+  0%,100% { transform: translateY(0px); }
+  30%     { transform: translateY(-8px); }
+  60%     { transform: translateY(6px); }
+  85%     { transform: translateY(-2px); }
+}
+@keyframes wiggle4 {
+  0%,100% { transform: translateY(0px); }
+  25%     { transform: translateY(4px); }
+  55%     { transform: translateY(-7px); }
+  80%     { transform: translateY(5px); }
+}
+@keyframes wiggle5 {
+  0%,100% { transform: translateY(0px); }
+  10%     { transform: translateY(-5px); }
+  40%     { transform: translateY(8px); }
+  65%     { transform: translateY(-4px); }
+}
+
+/* Tail length pulse */
+@keyframes cometTailGrow {
+  0%   { width: 0px;   opacity: 0; }
+  6%   { opacity: 1; }
+  30%  { width: var(--tail-max, 160px); }
+  70%  { width: calc(var(--tail-max, 160px) * 0.7); }
+  87%  { opacity: 0.85; }
+  100% { width: 0px;   opacity: 0; }
+}
+
+.comet-group {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  /* travel + wiggle run independently */
+  animation:
+    cometMove var(--dur) var(--del) linear infinite,
+    var(--wig-name, wiggle1) calc(var(--dur) * 0.4) var(--del) ease-in-out infinite;
+}
+.comet-tail {
+  display: block;
+  height: 1.5px;
+  border-radius: 999px;
+  /* tail color via CSS var */
+  background: linear-gradient(90deg, transparent, var(--c-mid, rgba(0,229,160,0.6)), var(--c-tip, rgba(34,211,238,0.4)));
+  animation: cometTailGrow var(--dur) var(--del) linear infinite;
+  flex-shrink: 0;
+}
+.comet-head {
+  display: block;
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: radial-gradient(circle, #fff 0%, var(--c-head, #00E5A0) 50%, transparent 100%);
+  box-shadow: 0 0 8px 3px var(--c-glow, rgba(0,229,160,0.6)), 0 0 2px 1px rgba(255,255,255,0.9);
 }
 
 @layer components {
-  .container-page {
-    @apply max-w-6xl mx-auto px-6 sm:px-8 lg:px-10;
+  .container-wide {
+    @apply w-full max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12;
   }
-  .glass {
-    @apply bg-white/70 dark:bg-ink-800/60 backdrop-blur-xl border border-ink-100/80 dark:border-white/10;
+
+  .container-narrow {
+    @apply w-full max-w-[800px] mx-auto px-6 sm:px-8;
   }
-  .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-ink-200/70 dark:border-white/10
-           bg-white/60 dark:bg-white/5 px-3 py-1.5 text-xs font-medium text-ink-500 dark:text-ink-200;
-  }
-  .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-full bg-ink-900 dark:bg-white text-white dark:text-ink-900
-           px-6 py-3 text-sm font-medium transition-all duration-300
-           hover:-translate-y-0.5 hover:shadow-glow active:translate-y-0 active:scale-[0.98];
-  }
-  .btn-ghost {
-    @apply inline-flex items-center gap-2 rounded-full border border-ink-200 dark:border-white/15
-           bg-white/50 dark:bg-white/5 px-6 py-3 text-sm font-medium text-ink-700 dark:text-ink-100
-           transition-all duration-300 hover:border-accent hover:text-accent dark:hover:border-accent
-           hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98];
-  }
+
+  .text-primary { color: var(--text-primary); }
+  .text-secondary { color: var(--text-secondary); }
+  .text-tertiary { color: var(--text-tertiary); }
+  .text-accent { color: var(--accent); }
+
+  .bg-base { background: var(--bg); }
+  .bg-elevated { background: var(--bg-elevated); }
+  .bg-subtle { background: var(--bg-subtle); }
+
+  .border-default { border-color: var(--border); }
+
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-accent via-violet-500 to-fuchsia-500
-           [background-size:200%_auto] animate-gradient-x;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #00E5A0, #22D3EE, #A78BFA);
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
   }
-  /* Surface is now used sparingly - most cards inline their styles to avoid hover:border shift.
-     Use this for static cards that don't need hover accent rings. */
-  .surface {
-    @apply rounded-2xl border border-ink-100 dark:border-white/10 bg-white/70 dark:bg-ink-800/50
-           backdrop-blur-sm shadow-card transition-shadow duration-300;
+
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
   }
-  .section-heading-eyebrow {
-    @apply text-xs font-semibold uppercase tracking-[0.18em] text-accent;
+
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium
+           transition-all duration-300 ease-out relative overflow-hidden;
+    background: var(--accent);
+    color: #0A0A0C;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .btn-primary:hover::before {
+    opacity: 1;
+  }
+  .btn-primary:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow:
+      0 0 40px -4px rgba(0, 229, 160, 0.5),
+      0 15px 40px -8px rgba(0, 229, 160, 0.3),
+      0 0 0 1px rgba(0, 229, 160, 0.3);
+  }
+  .btn-primary:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 0 20px -4px rgba(0, 229, 160, 0.3);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium
+           transition-all duration-300 ease-out relative overflow-hidden;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 0 30px -4px var(--accent-glow), 0 0 0 1px rgba(0, 229, 160, 0.15);
+    background: rgba(0, 229, 160, 0.03);
+  }
+
+  .label {
+    @apply text-xs font-medium uppercase tracking-[0.15em];
+    color: var(--accent);
+  }
+
+  .divider {
+    @apply w-full h-px;
+    background: var(--border);
+  }
+
+  .card-glow {
+    @apply relative rounded-2xl border border-[var(--border)] overflow-hidden transition-all duration-500;
+    background: var(--bg-elevated);
+    transform-style: preserve-3d;
+  }
+  .card-glow:hover {
+    border-color: rgba(0, 229, 160, 0.25);
+    box-shadow:
+      0 0 60px -15px rgba(0, 229, 160, 0.15),
+      0 20px 40px -12px rgba(0,0,0,0.15),
+      inset 0 0 40px -20px rgba(0, 229, 160, 0.03);
+  }
+  .card-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    background: radial-gradient(700px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), var(--accent-glow), transparent 40%);
+    z-index: 0;
+  }
+  .card-glow:hover::before {
+    opacity: 1;
+  }
+  /* Shimmer sweep animation on hover */
+  .card-glow::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(0, 229, 160, 0.03) 45%,
+      rgba(0, 229, 160, 0.06) 50%,
+      rgba(0, 229, 160, 0.03) 55%,
+      transparent 60%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+    z-index: 0;
+  }
+  .card-glow:hover::after {
+    opacity: 1;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
   }
 }

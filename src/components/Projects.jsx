@@ -1,117 +1,178 @@
 import { useRef, useState } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ArrowUpRight, Sparkles } from 'lucide-react';
-import SectionHeading from './SectionHeading.jsx';
+import { motion, useMotionValue, useSpring, useTransform, useInView } from 'framer-motion';
+import { ArrowUpRight, ExternalLink } from 'lucide-react';
 import { projects } from '../data/portfolio.js';
+import Magnetic from './Magnetic.jsx';
 
-/* 3D tilt card for projects - glow aligned with inset-0, hover via state */
+/* ================================================================
+   Projects - Premium case study cards with:
+   - Deep 3D perspective tilt (spring physics)
+   - Cursor-following light source (CSS + canvas glow)
+   - Staggered entrance with scale + blur
+   - Hover lift with glow shadow
+   - Tech pills with spring pop
+   - Image-less: typography-focused cards
+================================================================ */
+
+const reveal = {
+  hidden: { opacity: 0, y: 60, scale: 0.94, filter: 'blur(12px)' },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: { duration: 1, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] },
+  }),
+};
+
 function ProjectCard({ project, index }) {
   const ref = useRef(null);
-  const [hovered, setHovered] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
-  const sx = useSpring(x, { stiffness: 260, damping: 22 });
-  const sy = useSpring(y, { stiffness: 260, damping: 22 });
-  const rotateX = useTransform(sy, [0, 1], [4, -4]);
-  const rotateY = useTransform(sx, [0, 1], [-4, 4]);
-  const glowBg = useTransform(
-    [sx, sy],
-    ([px, py]) => `radial-gradient(320px circle at ${px * 100}% ${py * 100}%, rgba(31,111,235,0.13), transparent 50%)`
-  );
+  const springX = useSpring(x, { stiffness: 150, damping: 15 });
+  const springY = useSpring(y, { stiffness: 150, damping: 15 });
+  const rotateX = useTransform(springY, [0, 1], [6, -6]);
+  const rotateY = useTransform(springX, [0, 1], [-6, 6]);
+  const brightness = useTransform(springX, [0, 0.5, 1], [0.95, 1, 1.05]);
 
   const handleMove = (e) => {
     const rect = ref.current?.getBoundingClientRect();
     if (!rect) return;
-    x.set((e.clientX - rect.left) / rect.width);
-    y.set((e.clientY - rect.top) / rect.height);
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    x.set(px);
+    y.set(py);
+    ref.current.style.setProperty('--mouse-x', `${px * 100}%`);
+    ref.current.style.setProperty('--mouse-y', `${py * 100}%`);
   };
-  const handleLeave = () => { x.set(0.5); y.set(0.5); setHovered(false); };
+
+  const handleLeave = () => {
+    x.set(0.5);
+    y.set(0.5);
+    setIsHovered(false);
+  };
 
   return (
     <motion.article
       ref={ref}
       onMouseMove={handleMove}
-      onMouseEnter={() => setHovered(true)}
+      onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={handleLeave}
-      initial={{ opacity: 0, y: 28, filter: 'blur(6px)' }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial="hidden"
+      whileInView="visible"
       viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.6, delay: index * 0.07, ease: [0.22, 1, 0.36, 1] }}
-      style={{ rotateX, rotateY, transformPerspective: 900, willChange: 'transform' }}
-      className="group relative overflow-hidden rounded-2xl border border-ink-100 dark:border-white/10
-                 bg-white/70 dark:bg-ink-800/50 backdrop-blur-sm shadow-card transition-shadow duration-300
-                 hover:shadow-glow"
+      variants={reveal}
+      custom={index}
+      style={{ rotateX, rotateY, transformPerspective: 1000 }}
+      whileHover={{ y: -8, transition: { type: 'spring', stiffness: 200, damping: 20 } }}
+      className="card-glow p-8 sm:p-10 group"
     >
-      {/* Cursor-follow glow - inset-0 for perfect alignment */}
+      {/* Shimmer border effect on hover */}
       <motion.div
-        style={{ background: glowBg }}
-        className="pointer-events-none absolute inset-0 rounded-[inherit] transition-opacity duration-400"
-        animate={{ opacity: hovered ? 1 : 0 }}
+        className="absolute inset-0 rounded-2xl pointer-events-none overflow-hidden"
+        initial={false}
+        animate={{
+          boxShadow: isHovered
+            ? '0 0 60px -10px rgba(0, 229, 160, 0.2), inset 0 0 60px -20px rgba(0, 229, 160, 0.05)'
+            : '0 0 0px 0px transparent',
+        }}
+        transition={{ duration: 0.5 }}
       />
 
-      {/* Hover accent ring - uses outline to avoid layout shift */}
-      <div className="pointer-events-none absolute inset-0 rounded-[inherit]
-                      ring-1 ring-inset ring-transparent transition-[box-shadow] duration-300
-                      group-hover:ring-accent/25" />
+      {/* Header */}
+      <div className="relative flex items-start justify-between gap-4 mb-6">
+        <motion.span
+          initial={{ opacity: 0, x: -10 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
+          className="text-[11px] font-mono uppercase tracking-wider text-accent"
+        >
+          {project.subtitle}
+        </motion.span>
+        <motion.span
+          whileHover={{ scale: 1.05 }}
+          className="inline-flex items-center gap-1 rounded-full border border-accent/30
+                     bg-accent/5 px-3 py-1 text-[11px] font-semibold text-accent
+                     shadow-[0_0_12px_-4px_rgba(0,229,160,0.4)]"
+        >
+          {project.impact}
+        </motion.span>
+      </div>
 
-      <div className="relative p-7">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-accent">{project.subtitle}</div>
-            <h3 className="mt-1.5 font-display text-xl font-semibold text-ink-900 dark:text-white">{project.title}</h3>
-          </div>
-          {project.link ? (
-            <a href={project.link} target="_blank" rel="noreferrer"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl
-                         bg-ink-100 dark:bg-white/5 text-ink-600 dark:text-ink-200
-                         transition-all duration-300 group-hover:bg-accent group-hover:text-white group-hover:scale-110"
-              aria-label="Open project"
+      {/* Title */}
+      <h3 className="relative text-title sm:text-[1.5rem] max-w-lg leading-tight
+                     group-hover:text-accent transition-colors duration-500">
+        {project.title}
+      </h3>
+
+      {/* Description */}
+      <p className="relative mt-4 text-sm leading-relaxed text-secondary max-w-2xl">
+        {project.description}
+      </p>
+
+      {/* Tech + link */}
+      <div className="relative mt-8 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap gap-2">
+          {project.tech.map((t, ti) => (
+            <motion.span
+              key={t}
+              initial={{ opacity: 0, scale: 0.7 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.5 + ti * 0.04 }}
+              whileHover={{ scale: 1.1, y: -2 }}
+              className="rounded-md border border-[var(--border)] bg-[var(--bg-subtle)] px-2.5 py-1
+                         text-[11px] font-mono text-tertiary cursor-default
+                         hover:border-accent/30 hover:text-accent hover:bg-accent/5
+                         transition-colors duration-300"
             >
-              <ArrowUpRight size={16} />
-            </a>
-          ) : (
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl
-                             bg-ink-100/60 dark:bg-white/5 text-ink-400
-                             group-hover:text-accent transition-colors duration-300">
-              <Sparkles size={15} />
-            </span>
-          )}
-        </div>
-
-        <p className="mt-5 text-sm leading-relaxed text-ink-600 dark:text-ink-300">{project.description}</p>
-
-        <div className="mt-6 flex flex-wrap gap-2">
-          {project.tech.map((t) => (
-            <span key={t} className="rounded-md bg-ink-100/70 dark:bg-white/5 px-2.5 py-1 text-[11px] font-medium
-                                     text-ink-600 dark:text-ink-200 transition-colors duration-200
-                                     group-hover:bg-accent/10 group-hover:text-accent">
               {t}
-            </span>
+            </motion.span>
           ))}
         </div>
-
-        <div className="mt-7 flex items-center justify-between border-t border-ink-100/80 dark:border-white/[0.06] pt-5">
-          <span className="text-xs font-medium uppercase tracking-wider text-ink-400">Impact</span>
-          <span className="text-sm font-bold gradient-text">{project.impact}</span>
-        </div>
+        {project.link && (
+          <Magnetic strength={0.3}>
+            <a href={project.link} target="_blank" rel="noreferrer"
+               className="inline-flex items-center gap-1.5 text-xs font-medium text-accent
+                          hover:gap-2.5 transition-all duration-300">
+              View project <ArrowUpRight size={12} />
+            </a>
+          </Magnetic>
+        )}
       </div>
     </motion.article>
   );
 }
 
 export default function Projects() {
-  return (
-    <section id="projects" className="py-28 sm:py-36">
-      <div className="container-page">
-        <SectionHeading
-          eyebrow="Selected Work"
-          title="Projects with measurable impact"
-          description="A snapshot of systems I've designed and shipped - with the metrics that mattered to the business."
-        />
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: '-100px' });
 
-        <div className="mt-16 grid gap-6 md:grid-cols-2" style={{ perspective: 1000 }}>
-          {projects.map((p, i) => (
-            <ProjectCard key={p.title} project={p} index={i} />
+  return (
+    <section id="projects" ref={sectionRef} className="py-32 sm:py-40">
+      <div className="container-wide">
+        <motion.p
+          initial={{ opacity: 0, x: -20 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="label mb-4"
+        >
+          Work
+        </motion.p>
+        <motion.h2
+          initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
+          animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+          transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="text-headline max-w-lg mb-16"
+        >
+          Projects with <span className="gradient-text">measurable impact</span>.
+        </motion.h2>
+
+        <div className="grid gap-6">
+          {projects.map((p, idx) => (
+            <ProjectCard key={p.title} project={p} index={idx} />
           ))}
         </div>
       </div>

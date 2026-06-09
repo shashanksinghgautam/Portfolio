@@ -1,57 +1,113 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Github, Linkedin, Mail, Phone, Download, X, MessageCircle } from 'lucide-react';
+import {
+  Github, Linkedin, Mail, Phone, Download,
+  X, Plus, Copy, Check, ExternalLink,
+} from 'lucide-react';
 import { profile } from '../data/portfolio.js';
 
 /* ----------------------------------------------------------------
-   Floating side contact panel (right edge, vertical stack)
-   - Fixed on desktop, bottom-sheet trigger on mobile
-   - Icons with expanding labels on hover
-   - Staggered slide-in entrance
-   - Glow & scale micro-interactions
+   Floating side contact panel
+   - Desktop: fixed right-edge vertical strip
+   - Hover: expands left into a card with value + copy + open btns
+   - Mobile: FAB + bottom sheet
+   - Full theme compatibility via CSS variables
 ---------------------------------------------------------------- */
 
 const items = [
   {
     icon: Mail,
     label: 'Email',
+    value: profile.email,
+    display: profile.email,
     href: `mailto:${profile.email}`,
-    color: 'from-blue-500 to-cyan-400',
-    glow: 'rgba(59,130,246,0.5)',
+    copyable: true,
+    external: false,
+    download: false,
   },
   {
     icon: Github,
     label: 'GitHub',
+    value: profile.github,
+    display: profile.github.replace('https://', ''),
     href: profile.github,
-    color: 'from-gray-600 to-gray-400 dark:from-gray-300 dark:to-white',
-    glow: 'rgba(156,163,175,0.5)',
+    copyable: true,
     external: true,
+    download: false,
   },
   {
     icon: Linkedin,
     label: 'LinkedIn',
+    value: profile.linkedin,
+    display: profile.linkedin.replace('https://www.', ''),
     href: profile.linkedin,
-    color: 'from-blue-600 to-blue-400',
-    glow: 'rgba(37,99,235,0.5)',
+    copyable: true,
     external: true,
+    download: false,
   },
   {
     icon: Phone,
     label: 'Phone',
-    href: `tel:${profile.phone.replace(/\s/g, '')}`,
-    color: 'from-emerald-500 to-green-400',
-    glow: 'rgba(16,185,129,0.5)',
+    value: profile.phone,
+    display: profile.phone,
+    href: `tel:${profile.phone?.replace(/\s/g, '')}`,
+    copyable: true,
+    external: false,
+    download: false,
   },
   {
     icon: Download,
-    label: 'Resume',
+    label: 'Résumé',
+    value: 'Shashank_Resume.pdf',
+    display: 'Download PDF',
     href: profile.resumeUrl,
-    color: 'from-violet-500 to-fuchsia-500',
-    glow: 'rgba(139,92,246,0.5)',
+    copyable: false,
+    external: false,
     download: true,
   },
 ];
 
+// ── Copy-to-clipboard micro-button ───────────────────────────────
+function CopyButton({ value }) {
+  const [copied, setCopied] = useState(false);
+
+  const handle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <motion.button
+      onClick={handle}
+      whileTap={{ scale: 0.82 }}
+      title="Copy to clipboard"
+      className="flex h-6 w-6 items-center justify-center rounded-md flex-shrink-0
+                 border border-[var(--border)] bg-[var(--bg-subtle)]
+                 text-[var(--text-tertiary)] hover:text-accent hover:border-accent/40
+                 transition-all duration-200"
+    >
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={copied ? 'check' : 'copy'}
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.5, opacity: 0 }}
+          transition={{ duration: 0.12 }}
+        >
+          {copied
+            ? <Check size={11} className="text-accent" />
+            : <Copy size={11} />}
+        </motion.span>
+      </AnimatePresence>
+    </motion.button>
+  );
+}
+
+// ── Single side item ──────────────────────────────────────────────
 function SideItem({ item, index }) {
   const [hovered, setHovered] = useState(false);
 
@@ -59,108 +115,182 @@ function SideItem({ item, index }) {
     <motion.div
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.8 + index * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="relative group"
+      transition={{ delay: 1.0 + index * 0.08, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="relative flex items-center justify-end"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Expanding label tooltip (left side) */}
+      {/* Expanding card — spring-animates leftward from the icon */}
       <AnimatePresence>
         {hovered && (
-          <motion.span
-            initial={{ opacity: 0, x: 8, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 8, scale: 0.9 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap
-                       rounded-lg bg-ink-900 dark:bg-white px-3 py-1.5
-                       text-xs font-medium text-white dark:text-ink-900
-                       shadow-lg pointer-events-none"
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 'auto', opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 26, mass: 0.7 }}
+            className="absolute right-[calc(100%+10px)] overflow-hidden"
           >
-            {item.label}
-            {/* Arrow */}
-            <span className="absolute top-1/2 -right-1 -translate-y-1/2 h-2 w-2
-                             rotate-45 bg-ink-900 dark:bg-white" />
-          </motion.span>
+            <motion.div
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 8 }}
+              transition={{ duration: 0.18, delay: 0.06 }}
+              className="flex flex-col gap-2 rounded-xl p-3 whitespace-nowrap
+                         border-2 border-[var(--border)]
+                         bg-[var(--bg-elevated)]
+                         shadow-[0_8px_32px_-8px_rgba(0,0,0,0.22),0_0_0_1px_rgba(0,229,160,0.07)]"
+            >
+              {/* Category label */}
+              <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-accent">
+                {item.label}
+              </span>
+
+              {/* Value + action buttons */}
+              <div className="flex items-center gap-2">
+                <span className="text-[12.5px] font-medium text-[var(--text-primary)] max-w-[210px] truncate">
+                  {item.display}
+                </span>
+
+                <div className="flex items-center gap-1 ml-1 flex-shrink-0">
+                  {item.copyable && <CopyButton value={item.value} />}
+
+                  {/* Open / download action */}
+                  <motion.a
+                    href={item.href}
+                    target={item.external ? '_blank' : undefined}
+                    rel={item.external ? 'noreferrer' : undefined}
+                    download={item.download || undefined}
+                    onClick={(e) => e.stopPropagation()}
+                    whileTap={{ scale: 0.82 }}
+                    title={item.download ? 'Download' : 'Open'}
+                    className="flex h-6 w-6 items-center justify-center rounded-md flex-shrink-0
+                               border border-[var(--border)] bg-[var(--bg-subtle)]
+                               text-[var(--text-tertiary)] hover:text-accent hover:border-accent/40
+                               transition-all duration-200"
+                  >
+                    {item.download
+                      ? <Download size={11} />
+                      : <ExternalLink size={11} />}
+                  </motion.a>
+                </div>
+              </div>
+
+              {/* Arrow connector */}
+              <span
+                className="absolute top-1/2 -right-[5px] -translate-y-1/2 h-2.5 w-2.5
+                           rotate-45 border-t-2 border-r-2 border-[var(--border)]
+                           bg-[var(--bg-elevated)]"
+              />
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      <a
+      {/* Icon button — also a link so clicking it navigates */}
+      <motion.a
         href={item.href}
         target={item.external ? '_blank' : undefined}
         rel={item.external ? 'noreferrer' : undefined}
         download={item.download || undefined}
-        className="relative flex h-11 w-11 items-center justify-center rounded-2xl
-                   border border-ink-200/60 dark:border-white/10
-                   bg-white/80 dark:bg-ink-800/70 backdrop-blur-lg
-                   text-ink-500 dark:text-ink-300
-                   transition-all duration-300 ease-out
-                   hover:scale-110
-                   hover:shadow-lg"
+        aria-label={item.label}
+        animate={hovered ? { scale: 1.1 } : { scale: 1 }}
+        whileTap={{ scale: 0.92 }}
+        transition={{ type: 'spring', stiffness: 350, damping: 20 }}
+        className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl
+                   border-2 transition-colors duration-300"
         style={{
-          boxShadow: hovered ? `0 0 24px -4px ${item.glow}` : undefined,
+          borderColor: hovered ? 'rgba(0,229,160,0.5)' : 'var(--border)',
+          background: 'var(--bg-elevated)',
+          color: hovered ? 'var(--accent)' : 'var(--text-secondary)',
+          boxShadow: hovered
+            ? '0 0 20px -4px rgba(0,229,160,0.4), 0 2px 12px -2px rgba(0,0,0,0.15)'
+            : '0 2px 12px -2px rgba(0,0,0,0.15)',
         }}
       >
-        <motion.div
-          animate={hovered ? { scale: [1, 1.2, 1], rotate: [0, -6, 6, 0] } : {}}
+        <motion.span
+          animate={hovered ? { rotate: [0, -10, 10, 0] } : {}}
           transition={{ duration: 0.4 }}
         >
-          <item.icon size={17} className={hovered ? 'text-accent' : ''} />
-        </motion.div>
-        {/* Glow ring on hover - inset-0 for alignment */}
-        <span
-          className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100
-                     transition-opacity duration-300 ring-1 ring-inset ring-accent/40"
+          <item.icon size={15} />
+        </motion.span>
+        <motion.span
+          animate={{ opacity: hovered ? 1 : 0 }}
+          transition={{ duration: 0.25 }}
+          className="absolute inset-0 rounded-xl ring-1 ring-inset ring-accent/25 pointer-events-none"
         />
-      </a>
+      </motion.a>
     </motion.div>
   );
 }
 
+// ── Vertical tail line ────────────────────────────────────────────
+function VerticalLine() {
+  return (
+    <motion.div
+      initial={{ scaleY: 0, opacity: 0 }}
+      animate={{ scaleY: 1, opacity: 1 }}
+      transition={{ delay: 1.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="w-px h-14 origin-top bg-gradient-to-b from-accent/40 to-transparent mx-auto"
+    />
+  );
+}
+
+// ── Main export ───────────────────────────────────────────────────
 export default function FloatingContact() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <>
-      {/* Desktop: right-edge vertical strip */}
-      <div className="hidden lg:flex fixed right-5 top-1/2 -translate-y-1/2 z-40 flex-col gap-3">
+      {/* ── Desktop ── */}
+      <div className="hidden lg:flex fixed right-5 top-1/2 -translate-y-1/2 z-40 flex-col items-end gap-2.5">
         {items.map((item, i) => (
           <SideItem key={item.label} item={item} index={i} />
         ))}
+        <VerticalLine />
       </div>
 
-      {/* Mobile: floating action button + sheet */}
+      {/* ── Mobile FAB + sheet ── */}
       <div className="lg:hidden fixed bottom-5 right-5 z-40">
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              initial={{ opacity: 0, y: 16, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.9 }}
-              transition={{ duration: 0.25 }}
-              className="absolute bottom-16 right-0 flex flex-col gap-2.5 p-2 rounded-2xl
-                         border border-ink-200/50 dark:border-white/10
-                         bg-white/90 dark:bg-ink-900/90 backdrop-blur-2xl shadow-xl"
+              exit={{ opacity: 0, y: 16, scale: 0.92 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute bottom-16 right-0 flex flex-col gap-1 p-2 rounded-2xl
+                         border-2 border-[var(--border)]
+                         bg-[var(--bg-elevated)]
+                         shadow-[0_8px_40px_-8px_rgba(0,0,0,0.25)]"
             >
-              {items.map((item) => (
-                <a
+              {items.map((item, i) => (
+                <motion.div
                   key={item.label}
-                  href={item.href}
-                  target={item.external ? '_blank' : undefined}
-                  rel={item.external ? 'noreferrer' : undefined}
-                  download={item.download || undefined}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5
-                             hover:bg-ink-100/70 dark:hover:bg-white/5 transition-colors"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 group
+                             hover:bg-accent/5 transition-colors duration-200"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg
-                                   bg-ink-100 dark:bg-white/5 text-ink-600 dark:text-ink-200">
-                    <item.icon size={15} />
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg
+                                   border border-[var(--border)] bg-[var(--bg-subtle)]
+                                   text-[var(--text-tertiary)] group-hover:text-accent
+                                   group-hover:border-accent/30 transition-colors duration-200">
+                    <item.icon size={14} />
                   </span>
-                  <span className="text-sm font-medium text-ink-700 dark:text-ink-100">
-                    {item.label}
-                  </span>
-                </a>
+                  <a
+                    href={item.href}
+                    target={item.external ? '_blank' : undefined}
+                    rel={item.external ? 'noreferrer' : undefined}
+                    download={item.download || undefined}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex flex-col min-w-0"
+                  >
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-accent">{item.label}</span>
+                    <span className="text-[13px] font-medium text-[var(--text-secondary)] truncate max-w-[160px]">{item.display}</span>
+                  </a>
+                  {item.copyable && <CopyButton value={item.value} />}
+                </motion.div>
               ))}
             </motion.div>
           )}
@@ -170,8 +300,12 @@ export default function FloatingContact() {
           whileTap={{ scale: 0.9 }}
           onClick={() => setMobileOpen((v) => !v)}
           className="flex h-12 w-12 items-center justify-center rounded-2xl
-                     bg-gradient-to-br from-accent to-violet-600 text-white
-                     shadow-lg shadow-accent/30 transition-transform"
+                     border-2 border-[var(--border)]
+                     bg-[var(--bg-elevated)]
+                     text-[var(--text-secondary)]
+                     shadow-[0_4px_20px_-4px_rgba(0,0,0,0.25)]
+                     hover:border-accent/60 hover:text-accent
+                     transition-all duration-300"
           aria-label="Contact options"
         >
           <AnimatePresence mode="wait">
@@ -182,7 +316,7 @@ export default function FloatingContact() {
               exit={{ rotate: 90, opacity: 0 }}
               transition={{ duration: 0.15 }}
             >
-              {mobileOpen ? <X size={18} /> : <MessageCircle size={18} />}
+              {mobileOpen ? <X size={16} /> : <Plus size={16} />}
             </motion.span>
           </AnimatePresence>
         </motion.button>

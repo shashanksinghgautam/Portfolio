@@ -5,8 +5,8 @@ Modern, minimal portfolio built with **Vite + React + Tailwind CSS + Framer Moti
 ## Features
 
 - Dark / light mode with smooth transition (system-aware, persisted)
-- Hero with animated metrics and gradient identity
-- Sections: About, Skills, Projects, Experience timeline, Contact
+- Hero with animated metrics and a refined identity
+- Sections: About, Skills, Experience timeline, Projects, Achievements, Contact
 - Scroll-progress indicator and scroll-based reveals
 - Fully responsive, mobile-first
 - Resume download button (drop your PDF in `public/`)
@@ -23,8 +23,8 @@ npm run preview  # preview the production build
 
 ## Add your resume
 
-Place your PDF at `public/Shashank_Resume_Java_4_years.pdf` (the path referenced in `portfolio.js`).
-The "Download Resume" buttons will serve it directly.
+Place your PDF at `public/Shashank_Resume_Py_4.pdf` (the path referenced in `portfolio.js`).
+The "Download Résumé" buttons will serve it directly.
 
 ## Project structure
 
@@ -40,8 +40,9 @@ src/
     ├── Hero.jsx
     ├── About.jsx
     ├── Skills.jsx
-    ├── Projects.jsx
     ├── Experience.jsx
+    ├── Projects.jsx
+    ├── Achievements.jsx
     ├── Contact.jsx
     ├── Footer.jsx
     ├── ThemeToggle.jsx

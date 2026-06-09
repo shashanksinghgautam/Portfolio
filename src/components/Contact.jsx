@@ -1,74 +1,74 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Download } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { profile } from '../data/portfolio.js';
+import Magnetic from './Magnetic.jsx';
 
 /* ----------------------------------------------------------------
-   Bottom CTA section - minimal & elegant.
-   Primary contact is now the floating side panel; this is the
-   anchor-scrollable "Let's connect" call-to-action.
+   Contact - bold CTA with glowing accent elements.
 ---------------------------------------------------------------- */
+
+const reveal = {
+  hidden: { opacity: 0, y: 40, filter: 'blur(8px)' },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 0.9, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] },
+  }),
+};
 
 export default function Contact() {
   return (
-    <section id="contact" className="py-28 sm:py-36">
-      <div className="container-page">
+    <section id="contact" className="py-32 sm:py-40">
+      <div className="container-wide">
+        {/* Glowing container */}
         <motion.div
-          initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
-          whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="relative overflow-hidden rounded-3xl border border-ink-100 dark:border-white/10
-                     bg-white/50 dark:bg-ink-800/40 backdrop-blur-xl p-10 sm:p-16"
+          initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }}
+          variants={reveal} custom={0}
+          className="relative rounded-3xl border border-accent/20 bg-[var(--bg-elevated)] p-10 sm:p-16 overflow-hidden"
         >
           {/* Ambient glow orbs */}
-          <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full
-                          bg-[radial-gradient(circle,rgba(31,111,235,0.15),transparent_60%)]" />
-          <div className="pointer-events-none absolute -left-32 -bottom-32 h-96 w-96 rounded-full
-                          bg-[radial-gradient(circle,rgba(124,58,237,0.12),transparent_60%)]" />
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full
+                          bg-[radial-gradient(circle,rgba(0,229,160,0.15),transparent_60%)] blur-xl" />
+          <div className="pointer-events-none absolute -left-20 -bottom-20 h-72 w-72 rounded-full
+                          bg-[radial-gradient(circle,rgba(34,211,238,0.08),transparent_60%)] blur-xl" />
 
-          <div className="relative max-w-xl mx-auto text-center">
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="section-heading-eyebrow"
-            >
-              Get in Touch
+          <div className="relative max-w-xl">
+            <motion.p variants={reveal} custom={1} className="label mb-4">
+              Contact
             </motion.p>
-            <motion.h2
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.15 }}
-              className="mt-3 font-display text-3xl sm:text-4xl font-semibold tracking-tight
-                         text-ink-900 dark:text-white"
-            >
+
+            <motion.h2 variants={reveal} custom={2} className="text-headline">
               Let's build something{' '}
-              <span className="gradient-text">great together</span>.
+              <span className="gradient-text">extraordinary</span>.
             </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="mt-4 text-base sm:text-lg text-ink-500 dark:text-ink-300"
-            >
-              I'm open to senior backend / full-stack roles, system-design discussions, and interesting collaborations.
+
+            <motion.p variants={reveal} custom={3} className="mt-6 text-base text-secondary max-w-lg">
+              I'm open to full-stack engineering roles, backend projects, and
+              ambitious product collaborations. Let's talk.
             </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="mt-8 flex flex-wrap justify-center gap-3"
-            >
-              <a href={`mailto:${profile.email}`} className="btn-primary group">
-                Say hello
-                <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+
+            <motion.div variants={reveal} custom={4} className="mt-10 flex flex-wrap items-center gap-4">
+              <Magnetic strength={0.2}>
+                <a href={`mailto:${profile.email}`} className="btn-primary group">
+                  {profile.email}
+                  <ArrowUpRight size={14} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </a>
+              </Magnetic>
+            </motion.div>
+
+            <motion.div variants={reveal} custom={5} className="mt-8 flex flex-wrap gap-6">
+              <a href={profile.github} target="_blank" rel="noreferrer"
+                 className="text-sm text-tertiary hover:text-accent transition-colors duration-300">
+                GitHub
               </a>
-              <a href={profile.resumeUrl} download className="btn-ghost">
-                <Download size={16} /> Download Resume
+              <a href={profile.linkedin} target="_blank" rel="noreferrer"
+                 className="text-sm text-tertiary hover:text-accent transition-colors duration-300">
+                LinkedIn
+              </a>
+              <a href={profile.resumeUrl} download
+                 className="text-sm text-tertiary hover:text-accent transition-colors duration-300">
+                Résumé
               </a>
             </motion.div>
           </div>
