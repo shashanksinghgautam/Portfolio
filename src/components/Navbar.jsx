@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ArrowUpRight } from 'lucide-react';
 import { navLinks, profile } from '../data/portfolio.js';
 import ThemeToggle from './ThemeToggle.jsx';
+import { useIsMobile } from '../hooks/useDevicePerformance.js';
 
 /* ----------------------------------------------------------------
    Navbar - floating glass with accent border glow on scroll.
@@ -106,6 +107,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [active, setActive] = useState(null);
   const [hovered, setHovered] = useState(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -134,17 +136,19 @@ export default function Navbar() {
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
       className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-4"
     >
-      {/* Comet strip - spans full header width above the pill */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-full overflow-hidden opacity-60">
-        <CometLayer />
-      </div>
+      {/* Comet strip - desktop only (expensive continuous animation) */}
+      {!isMobile && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-full overflow-hidden opacity-60">
+          <CometLayer />
+        </div>
+      )}
 
       <nav
         onMouseLeave={() => setHovered(null)}
         className={`relative flex w-full max-w-[760px] items-center justify-between rounded-full px-2 py-2 transition-all duration-700
           ${scrolled
-            ? 'border border-accent/20 bg-[var(--bg)]/85 backdrop-blur-2xl shadow-[0_0_30px_-10px_rgba(0,229,160,0.15)]'
-            : 'border border-transparent bg-[var(--bg)]/50 backdrop-blur-md'
+            ? `border border-accent/20 bg-[var(--bg)]/85 ${isMobile ? 'backdrop-blur-md' : 'backdrop-blur-2xl'} shadow-[0_0_30px_-10px_rgba(0,229,160,0.15)]`
+            : `border border-transparent bg-[var(--bg)]/50 ${isMobile ? 'backdrop-blur-sm' : 'backdrop-blur-md'}`
           }`}
       >
         {/* Logo mark */}
@@ -193,7 +197,7 @@ export default function Navbar() {
             exit={{ opacity: 0, y: -8, scale: 0.95 }}
             transition={{ duration: 0.25 }}
             className="absolute top-full left-4 right-4 mt-2 rounded-2xl border border-accent/20
-                       bg-[var(--bg-elevated)]/95 backdrop-blur-2xl shadow-[0_0_40px_-10px_rgba(0,229,160,0.1)] overflow-hidden"
+                       bg-[var(--bg-elevated)]/95 backdrop-blur-md shadow-[0_0_20px_-10px_rgba(0,229,160,0.1)] overflow-hidden"
           >
             <div className="flex flex-col p-3">
               {navLinks.map((l, i) => (

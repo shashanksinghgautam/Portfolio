@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, memo } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { skillGroups } from '../data/portfolio.js';
+import { useIsMobile } from '../hooks/useDevicePerformance.js';
 
 /* ================================================================
    Skills - Animated bento grid with:
@@ -45,15 +46,16 @@ function SkillCard({ group, index }) {
   const cardRef = useRef(null);
   const [hovered, setHovered] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const isMobile = useIsMobile();
 
   const handleMouseMove = (e) => {
+    if (isMobile) return;
     const rect = cardRef.current?.getBoundingClientRect();
     if (!rect) return;
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     cardRef.current.style.setProperty('--mouse-x', `${x}%`);
     cardRef.current.style.setProperty('--mouse-y', `${y}%`);
-    // 3D tilt
     const tiltX = ((y - 50) / 50) * -4;
     const tiltY = ((x - 50) / 50) * 4;
     setTilt({ x: tiltX, y: tiltY });
@@ -75,12 +77,12 @@ function SkillCard({ group, index }) {
       viewport={{ once: true, margin: '-60px' }}
       variants={reveal}
       custom={index}
-      animate={{
+      animate={isMobile ? undefined : {
         rotateX: tilt.x,
         rotateY: tilt.y,
         transition: { type: 'spring', stiffness: 300, damping: 30 },
       }}
-      style={{ transformPerspective: 1000 }}
+      style={isMobile ? undefined : { transformPerspective: 1000 }}
       className={`card-glow p-6 sm:p-8 ${spanClasses[index] || ''}`}
     >
       {/* Animated border on hover */}

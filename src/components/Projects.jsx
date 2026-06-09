@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, memo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useInView } from 'framer-motion';
 import { ArrowUpRight, ExternalLink } from 'lucide-react';
 import { projects } from '../data/portfolio.js';
 import Magnetic from './Magnetic.jsx';
+import { useIsMobile } from '../hooks/useDevicePerformance.js';
 
 /* ================================================================
    Projects - Premium case study cards with:
@@ -28,15 +29,16 @@ const reveal = {
 function ProjectCard({ project, index }) {
   const ref = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
+  const isMobile = useIsMobile();
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
   const springX = useSpring(x, { stiffness: 150, damping: 15 });
   const springY = useSpring(y, { stiffness: 150, damping: 15 });
   const rotateX = useTransform(springY, [0, 1], [6, -6]);
   const rotateY = useTransform(springX, [0, 1], [-6, 6]);
-  const brightness = useTransform(springX, [0, 0.5, 1], [0.95, 1, 1.05]);
 
   const handleMove = (e) => {
+    if (isMobile) return;
     const rect = ref.current?.getBoundingClientRect();
     if (!rect) return;
     const px = (e.clientX - rect.left) / rect.width;
@@ -64,8 +66,8 @@ function ProjectCard({ project, index }) {
       viewport={{ once: true, margin: '-80px' }}
       variants={reveal}
       custom={index}
-      style={{ rotateX, rotateY, transformPerspective: 1000 }}
-      whileHover={{ y: -8, transition: { type: 'spring', stiffness: 200, damping: 20 } }}
+      style={isMobile ? undefined : { rotateX, rotateY, transformPerspective: 1000 }}
+      whileHover={isMobile ? undefined : { y: -8, transition: { type: 'spring', stiffness: 200, damping: 20 } }}
       className="card-glow p-8 sm:p-10 group"
     >
       {/* Shimmer border effect on hover */}

@@ -304,3 +304,102 @@ body::before {
     100% { background-position: -200% 0; }
   }
 }
+
+/* ── Mobile Performance Optimizations ─────────────────────────── */
+@media (max-width: 768px) {
+  /* Disable noise overlay on mobile - it causes compositing overhead */
+  body::before {
+    display: none;
+  }
+
+  /* Reduce card hover effects on mobile */
+  .card-glow::before,
+  .card-glow::after {
+    display: none;
+  }
+
+  /* Disable comet animations on mobile */
+  .comet-group,
+  .comet-tail,
+  .comet-head {
+    display: none;
+  }
+
+  /* Simplify btn-primary hover effects */
+  .btn-primary:hover {
+    transform: none;
+    box-shadow: 0 0 20px -4px rgba(0, 229, 160, 0.3);
+  }
+
+  .btn-secondary:hover {
+    transform: none;
+  }
+
+  /* Disable morph animations */
+  .animate-morph-1,
+  .animate-morph-2,
+  .animate-morph-3 {
+    animation: none !important;
+  }
+
+  /* Reduce float animation */
+  .animate-float {
+    animation: none !important;
+  }
+
+  /* Lighter gradient text animation */
+  .gradient-text {
+    animation: none;
+    background-position: 0% 50%;
+  }
+}
+
+/* ── Respect prefers-reduced-motion ───────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  body::before {
+    display: none;
+  }
+
+  .card-glow::before,
+  .card-glow::after {
+    display: none;
+  }
+
+  .comet-group,
+  .comet-tail,
+  .comet-head {
+    display: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ── Tablet optimizations (768px - 1024px) ────────────────────── */
+@media (max-width: 1024px) and (pointer: coarse) {
+  body::before {
+    display: none;
+  }
+
+  .card-glow::after {
+    display: none;
+  }
+
+  .comet-group {
+    display: none;
+  }
+}
+
+/* ── GPU acceleration hints for scroll-heavy elements ─────────── */
+.fixed {
+  will-change: transform;
+}

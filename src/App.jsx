@@ -1,17 +1,20 @@
+import { lazy, Suspense } from 'react';
 import Navbar from './components/Navbar.jsx';
 import Hero from './components/Hero.jsx';
-import About from './components/About.jsx';
-import Skills from './components/Skills.jsx';
-import Experience from './components/Experience.jsx';
-import Projects from './components/Projects.jsx';
-import Achievements from './components/Achievements.jsx';
-import Contact from './components/Contact.jsx';
-import Footer from './components/Footer.jsx';
 import BackgroundDecor from './components/BackgroundDecor.jsx';
 import ScrollProgress from './components/ScrollProgress.jsx';
 import CustomCursor from './components/CustomCursor.jsx';
 import SectionDivider from './components/SectionDivider.jsx';
-import FloatingContact from './components/FloatingContact.jsx';
+
+// Lazy-load below-the-fold sections for faster initial paint
+const About = lazy(() => import('./components/About.jsx'));
+const Skills = lazy(() => import('./components/Skills.jsx'));
+const Experience = lazy(() => import('./components/Experience.jsx'));
+const Projects = lazy(() => import('./components/Projects.jsx'));
+const Achievements = lazy(() => import('./components/Achievements.jsx'));
+const Contact = lazy(() => import('./components/Contact.jsx'));
+const Footer = lazy(() => import('./components/Footer.jsx'));
+const FloatingContact = lazy(() => import('./components/FloatingContact.jsx'));
 
 export default function App() {
   return (
@@ -19,24 +22,28 @@ export default function App() {
       <CustomCursor />
       <BackgroundDecor />
       <ScrollProgress />
-      <FloatingContact />
       <Navbar />
       <main>
         <Hero />
-        <SectionDivider />
-        <About />
-        <SectionDivider />
-        <Skills />
-        <SectionDivider />
-        <Experience />
-        <SectionDivider />
-        <Projects />
-        <SectionDivider />
-        <Achievements />
-        <SectionDivider />
-        <Contact />
+        <Suspense fallback={null}>
+          <SectionDivider />
+          <About />
+          <SectionDivider />
+          <Skills />
+          <SectionDivider />
+          <Experience />
+          <SectionDivider />
+          <Projects />
+          <SectionDivider />
+          <Achievements />
+          <SectionDivider />
+          <Contact />
+        </Suspense>
       </main>
-      <Footer />
+      <Suspense fallback={null}>
+        <FloatingContact />
+        <Footer />
+      </Suspense>
     </div>
   );
 }
