@@ -12,6 +12,7 @@ export const profile = {
   github: 'https://github.com/shashanksinghgautam',
   linkedin: 'https://www.linkedin.com/in/shashank0512',
   resumeUrl: '/Shashank_Resume_Py_4.pdf',
+  awardsPdfUrl: '/CGI_AWARDS.pdf',
   yearsExperience: 4,
   metrics: [
     { value: '90%', label: 'Less manual processing' },

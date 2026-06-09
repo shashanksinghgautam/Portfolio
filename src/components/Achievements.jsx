@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { achievements } from '../data/portfolio.js';
+import { achievements, profile } from '../data/portfolio.js';
 
 /* ================================================================
    Achievements - Animated metric grid with:
@@ -137,6 +137,31 @@ export default function Achievements() {
         >
           Numbers that <span className="gradient-text">mattered</span>.
         </motion.h2>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="-mt-10 mb-10 flex flex-wrap items-center gap-3"
+        >
+          <a
+            href={profile.awardsPdfUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-secondary"
+          >
+            View awards PDF
+          </a>
+          <a
+            href={profile.awardsPdfUrl}
+            download
+            className="rounded-full border border-accent/30 bg-accent/5 px-4 py-2 text-sm font-medium
+                       text-accent hover:bg-accent/10 hover:shadow-[0_0_18px_-8px_rgba(0,229,160,0.45)]
+                       transition-all duration-300"
+          >
+            Download awards PDF
+          </a>
+        </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {achievements.map((a, i) => (
