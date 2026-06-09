@@ -150,7 +150,7 @@ export default function Navbar() {
         {/* Logo mark */}
         <a href="#top" className="flex items-center gap-2 pl-3">
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 border border-accent/30">
-            <span className="text-[11px] font-bold text-accent">SG</span>
+            <span className="text-[11px] font-bold text-accent">SSG</span>
           </span>
         </a>
 

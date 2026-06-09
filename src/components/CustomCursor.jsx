@@ -12,12 +12,14 @@ import { motion, useMotionValue, useSpring } from 'framer-motion';
 export default function CustomCursor() {
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
-  const ringX = useSpring(cursorX, { stiffness: 150, damping: 15, mass: 0.5 });
-  const ringY = useSpring(cursorY, { stiffness: 150, damping: 15, mass: 0.5 });
-  const dotX = useSpring(cursorX, { stiffness: 400, damping: 28 });
-  const dotY = useSpring(cursorY, { stiffness: 400, damping: 28 });
+  const ringX = useSpring(cursorX, { stiffness: 200, damping: 22, mass: 0.45 });
+  const ringY = useSpring(cursorY, { stiffness: 200, damping: 22, mass: 0.45 });
+  const dotX = useSpring(cursorX, { stiffness: 480, damping: 32 });
+  const dotY = useSpring(cursorY, { stiffness: 480, damping: 32 });
   const scale = useMotionValue(1);
-  const ringScale = useSpring(scale, { stiffness: 300, damping: 20 });
+  const ringScale = useSpring(scale, { stiffness: 320, damping: 24 });
+  const ringOpacity = useMotionValue(0.45);
+  const dotOpacity = useMotionValue(0.8);
 
   useEffect(() => {
     // Only show on desktop
@@ -28,10 +30,27 @@ export default function CustomCursor() {
       cursorY.set(e.clientY);
     };
 
-    const handleHoverStart = () => scale.set(2.5);
-    const handleHoverEnd = () => scale.set(1);
+    const handleHoverStart = () => {
+      scale.set(1.45);
+      ringOpacity.set(0.72);
+    };
+    const handleHoverEnd = () => {
+      scale.set(1);
+      ringOpacity.set(0.45);
+    };
+
+    const handleMouseDown = () => {
+      scale.set(0.9);
+      dotOpacity.set(1);
+    };
+    const handleMouseUp = () => {
+      scale.set(1);
+      dotOpacity.set(0.8);
+    };
 
     window.addEventListener('mousemove', moveCursor);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
 
     // Listen for hovers on interactive elements
     const interactives = document.querySelectorAll('a, button, [role="button"], .card-glow, input, textarea');
@@ -54,13 +73,15 @@ export default function CustomCursor() {
 
     return () => {
       window.removeEventListener('mousemove', moveCursor);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
       interactives.forEach((el) => {
         el.removeEventListener('mouseenter', handleHoverStart);
         el.removeEventListener('mouseleave', handleHoverEnd);
       });
       observer.disconnect();
     };
-  }, [cursorX, cursorY, scale]);
+  }, [cursorX, cursorY, scale, ringOpacity, dotOpacity]);
 
   // Don't render on mobile
   if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) {
@@ -75,23 +96,25 @@ export default function CustomCursor() {
           x: ringX,
           y: ringY,
           scale: ringScale,
+          opacity: ringOpacity,
           translateX: '-50%',
           translateY: '-50%',
         }}
         className="pointer-events-none fixed left-0 top-0 z-[9998] hidden md:block
-                   h-10 w-10 rounded-full border border-accent/40
-                   mix-blend-difference transition-colors duration-300"
+                   h-8 w-8 rounded-full border border-accent/50
+                   bg-accent/5 transition-colors duration-300"
       />
       {/* Dot - tight follow */}
       <motion.div
         style={{
           x: dotX,
           y: dotY,
+          opacity: dotOpacity,
           translateX: '-50%',
           translateY: '-50%',
         }}
         className="pointer-events-none fixed left-0 top-0 z-[9999] hidden md:block
-                   h-2 w-2 rounded-full bg-accent"
+                   h-1.5 w-1.5 rounded-full bg-accent"
       />
     </>
   );

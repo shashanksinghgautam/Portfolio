@@ -124,7 +124,7 @@ function ParticleCanvas() {
       // Colors per theme
       const colors = isDark
         ? [[0, 229, 160], [34, 211, 238], [167, 139, 250]]
-        : [[5, 150, 105], [20, 184, 166], [139, 92, 246]];
+        : [[14, 165, 233], [16, 185, 129], [139, 92, 246]];
 
       // Update particles
       for (const p of particles) {
@@ -168,7 +168,7 @@ function ParticleCanvas() {
           const dd = ddx * ddx + ddy * ddy;
           if (dd < CONNECTION_DIST * CONNECTION_DIST) {
             const ratio = 1 - Math.sqrt(dd) / CONNECTION_DIST;
-            const opacity = ratio * (isDark ? 0.3 : 0.18);
+            const opacity = ratio * (isDark ? 0.3 : 0.16);
             const c = colors[a.colorIdx];
             ctx.strokeStyle = `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${opacity})`;
             ctx.lineWidth = ratio * 1.2;
@@ -184,7 +184,7 @@ function ParticleCanvas() {
       for (const p of particles) {
         const glow = 0.5 + 0.5 * Math.sin(p.pulse);
         const size = p.r * (0.8 + glow * 0.6);
-        const opacity = isDark ? (0.5 + glow * 0.45) : (0.35 + glow * 0.35);
+        const opacity = isDark ? (0.5 + glow * 0.45) : (0.32 + glow * 0.28);
         const c = colors[p.colorIdx];
 
         // Outer glow ring
@@ -291,7 +291,7 @@ function AuroraLayer() {
         className="absolute -top-[25%] -left-[15%] h-[800px] w-[800px]"
       >
         <div className="h-full w-full rounded-full animate-morph-1
-          bg-[radial-gradient(ellipse_at_center,rgba(5,150,105,0.12)_0%,rgba(20,184,166,0.06)_40%,transparent_70%)]
+          bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.16)_0%,rgba(52,211,153,0.09)_40%,transparent_70%)]
           dark:bg-[radial-gradient(ellipse_at_center,rgba(0,229,160,0.14)_0%,rgba(34,211,238,0.07)_40%,transparent_70%)]
           blur-[80px]" />
       </motion.div>
@@ -302,7 +302,7 @@ function AuroraLayer() {
         className="absolute top-[25%] -right-[20%] h-[700px] w-[700px]"
       >
         <div className="h-full w-full rounded-full animate-morph-2
-          bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.1)_0%,rgba(20,184,166,0.05)_40%,transparent_70%)]
+          bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.12)_0%,rgba(59,130,246,0.07)_40%,transparent_70%)]
           dark:bg-[radial-gradient(ellipse_at_center,rgba(167,139,250,0.1)_0%,rgba(34,211,238,0.05)_40%,transparent_70%)]
           blur-[100px]" />
       </motion.div>
@@ -313,14 +313,14 @@ function AuroraLayer() {
         className="absolute -bottom-[15%] left-[15%] h-[600px] w-[600px]"
       >
         <div className="h-full w-full rounded-full animate-morph-3
-          bg-[radial-gradient(ellipse_at_center,rgba(5,150,105,0.08)_0%,rgba(139,92,246,0.05)_40%,transparent_70%)]
+          bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.1)_0%,rgba(167,139,250,0.07)_40%,transparent_70%)]
           dark:bg-[radial-gradient(ellipse_at_center,rgba(0,229,160,0.07)_0%,rgba(167,139,250,0.04)_40%,transparent_70%)]
           blur-[90px]" />
       </motion.div>
 
       {/* Light mode warmth accent */}
       <div className="absolute top-[8%] right-[15%] h-[450px] w-[450px] rounded-full
-        bg-[radial-gradient(ellipse_at_center,rgba(251,146,60,0.07)_0%,transparent_60%)]
+        bg-[radial-gradient(ellipse_at_center,rgba(251,146,60,0.08)_0%,transparent_60%)]
         dark:bg-transparent blur-[80px] animate-pulse-slow" />
     </div>
   );

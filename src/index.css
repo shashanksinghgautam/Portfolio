@@ -4,15 +4,15 @@
 
 :root {
   color-scheme: light dark;
-  --bg: #EEF0F4;
-  --bg-elevated: #E8EAEF;
-  --bg-subtle: #DFE2E9;
-  --border: rgba(0, 0, 0, 0.09);
-  --text-primary: #0C0A09;
-  --text-secondary: #44403C;
-  --text-tertiary: #78716C;
-  --accent: #059669;
-  --accent-glow: rgba(5, 150, 105, 0.22);
+  --bg: #F3F7FF;
+  --bg-elevated: #EAF0FC;
+  --bg-subtle: #DFE8F8;
+  --border: rgba(15, 23, 42, 0.12);
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-tertiary: #64748B;
+  --accent: #0D9488;
+  --accent-glow: rgba(13, 148, 136, 0.2);
 }
 
 .dark {
@@ -39,10 +39,10 @@ html {
 
 @media (pointer: fine) {
   html {
-    cursor: none;
+    cursor: auto;
   }
   a, button, [role="button"], input, textarea, select {
-    cursor: none;
+    cursor: auto;
   }
 }
 
@@ -53,6 +53,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
+}
+
+/* Light-theme gradient body background */
+html:not(.dark) body {
+  background: linear-gradient(135deg, #F8FBFF 0%, #EEF5FF 35%, #F4EFFF 68%, #EAFBF4 100%);
+  background-attachment: fixed;
 }
 
 ::selection {
