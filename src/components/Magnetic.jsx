@@ -1,24 +1,17 @@
-import { useRef, memo } from 'react';
+import { useRef } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { useIsMobile } from '../hooks/useDevicePerformance.js';
 
 /* ================================================================
    Magnetic - wraps any element and makes it magnetically attracted
-   to the cursor on hover. Disabled on mobile for performance.
+   to the cursor on hover. Used on buttons, links, and cards.
 ================================================================ */
 
-function Magnetic({ children, strength = 0.3, className = '' }) {
+export default function Magnetic({ children, strength = 0.3, className = '' }) {
   const ref = useRef(null);
-  const isMobile = useIsMobile();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const springX = useSpring(x, { stiffness: 200, damping: 15 });
   const springY = useSpring(y, { stiffness: 200, damping: 15 });
-
-  // On mobile, render children without magnetic effect
-  if (isMobile) {
-    return <div className={`inline-block ${className}`}>{children}</div>;
-  }
 
   const handleMove = (e) => {
     const rect = ref.current?.getBoundingClientRect();
@@ -46,5 +39,3 @@ function Magnetic({ children, strength = 0.3, className = '' }) {
     </motion.div>
   );
 }
-
-export default memo(Magnetic);

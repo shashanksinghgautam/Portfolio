@@ -4,10 +4,10 @@
 
 :root {
   color-scheme: light dark;
-  --bg: #F3F7FF;
-  --bg-elevated: #EAF0FC;
-  --bg-subtle: #DFE8F8;
-  --border: rgba(15, 23, 42, 0.12);
+  --bg: #EAEFF8;
+  --bg-elevated: #E2E8F4;
+  --bg-subtle: #D8DFEE;
+  --border: rgba(15, 23, 42, 0.10);
   --text-primary: #0F172A;
   --text-secondary: #334155;
   --text-tertiary: #64748B;
@@ -55,9 +55,9 @@ body {
   line-height: 1.6;
 }
 
-/* Light-theme gradient body background */
+/* Light-theme gradient body background - soft neutral tones */
 html:not(.dark) body {
-  background: linear-gradient(135deg, #F8FBFF 0%, #EEF5FF 35%, #F4EFFF 68%, #EAFBF4 100%);
+  background: linear-gradient(160deg, #EDF1F8 0%, #E8EDF6 25%, #EDEAF5 50%, #E6F0F0 75%, #EBF0F7 100%);
   background-attachment: fixed;
 }
 
@@ -305,56 +305,51 @@ body::before {
   }
 }
 
-/* ── Mobile Performance Optimizations ─────────────────────────── */
-@media (max-width: 768px) {
-  /* Disable noise overlay on mobile - it causes compositing overhead */
+/* ── Mobile-only Performance Optimizations (< 768px) ──────────── */
+@media (max-width: 767px) {
+  /* Disable noise overlay on small screens */
   body::before {
     display: none;
   }
 
-  /* Reduce card hover effects on mobile */
+  /* Remove expensive card pseudo-element effects */
   .card-glow::before,
   .card-glow::after {
     display: none;
   }
 
-  /* Disable comet animations on mobile */
+  /* Disable comet animations */
   .comet-group,
   .comet-tail,
   .comet-head {
     display: none;
   }
 
-  /* Simplify btn-primary hover effects */
+  /* Simplify button hover transforms */
   .btn-primary:hover {
     transform: none;
     box-shadow: 0 0 20px -4px rgba(0, 229, 160, 0.3);
   }
-
   .btn-secondary:hover {
     transform: none;
   }
 
-  /* Disable morph animations */
+  /* Disable continuous keyframe animations */
   .animate-morph-1,
   .animate-morph-2,
-  .animate-morph-3 {
-    animation: none !important;
-  }
-
-  /* Reduce float animation */
+  .animate-morph-3,
   .animate-float {
     animation: none !important;
   }
 
-  /* Lighter gradient text animation */
+  /* Stop gradient-text animation */
   .gradient-text {
     animation: none;
     background-position: 0% 50%;
   }
 }
 
-/* ── Respect prefers-reduced-motion ───────────────────────────── */
+/* ── Respect prefers-reduced-motion (all screen sizes) ────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -364,42 +359,9 @@ body::before {
     transition-duration: 0.01ms !important;
   }
 
-  body::before {
-    display: none;
-  }
-
+  body::before { display: none; }
   .card-glow::before,
-  .card-glow::after {
-    display: none;
-  }
-
-  .comet-group,
-  .comet-tail,
-  .comet-head {
-    display: none;
-  }
-
-  html {
-    scroll-behavior: auto;
-  }
-}
-
-/* ── Tablet optimizations (768px - 1024px) ────────────────────── */
-@media (max-width: 1024px) and (pointer: coarse) {
-  body::before {
-    display: none;
-  }
-
-  .card-glow::after {
-    display: none;
-  }
-
-  .comet-group {
-    display: none;
-  }
-}
-
-/* ── GPU acceleration hints for scroll-heavy elements ─────────── */
-.fixed {
-  will-change: transform;
+  .card-glow::after { display: none; }
+  .comet-group { display: none; }
+  html { scroll-behavior: auto; }
 }

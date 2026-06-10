@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * Detects device capability and returns performance tier.
- * - 'low': mobile/tablet or prefers-reduced-motion
- * - 'high': desktop with fine pointer
+ * - 'low': small-screen mobile/tablet (narrow + touch)
+ * - 'high': laptop/desktop (any screen with fine pointer, or wide screens)
  */
 function getPerformanceTier() {
   if (typeof window === 'undefined') return 'high';
@@ -13,10 +13,13 @@ function getPerformanceTier() {
 
   const isCoarse = window.matchMedia('(pointer: coarse)').matches;
   const isNarrow = window.innerWidth < 768;
-  const isMidRange = window.innerWidth < 1024;
 
-  if (isCoarse || isNarrow) return 'low';
-  if (isMidRange) return 'low';
+  // Only mark as low if BOTH touch device AND small screen
+  // This preserves full animations on laptops, desktops, and large tablets
+  if (isCoarse && isNarrow) return 'low';
+
+  // Small screen without touch (unlikely but safe)
+  if (isNarrow) return 'low';
 
   return 'high';
 }

@@ -3,7 +3,6 @@ import { motion, useScroll, useTransform, useInView, useSpring, useMotionValue }
 import { ArrowDown, ArrowRight } from 'lucide-react';
 import { profile } from '../data/portfolio.js';
 import Magnetic from './Magnetic.jsx';
-import { useIsMobile } from '../hooks/useDevicePerformance.js';
 
 /* ================================================================
    Hero - Cinematic immersive entrance.
@@ -84,20 +83,8 @@ function AnimatedCounter({ value, suffix = '', duration = 2000, delay = 0 }) {
   return <span ref={ref}>{display}</span>;
 }
 
-// Character reveal component - simplified on mobile
-function CharReveal({ text, className, delay = 0, isMobile = false }) {
-  if (isMobile) {
-    return (
-      <motion.span
-        className={`inline-block ${className}`}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {text}
-      </motion.span>
-    );
-  }
+// Character reveal component
+function CharReveal({ text, className, delay = 0 }) {
   return (
     <motion.span className={`inline-block ${className}`}>
       {text.split('').map((char, i) => (
@@ -137,16 +124,15 @@ const reveal = {
 export default function Hero() {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true });
-  const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start start', 'end start'],
   });
-  const yParallax = useTransform(scrollYProgress, [0, 1], [0, isMobile ? 0 : -150]);
-  const opacityFade = useTransform(scrollYProgress, [0, 0.6], [1, isMobile ? 1 : 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.6], [1, isMobile ? 1 : 0.92]);
+  const yParallax = useTransform(scrollYProgress, [0, 1], [0, -150]);
+  const opacityFade = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.6], [1, 0.92]);
 
-  const roleText = useTextScramble('Software Engineer', isInView, isMobile ? 0 : 1200);
+  const roleText = useTextScramble('Software Engineer', isInView, 1200);
 
   return (
     <section
@@ -154,8 +140,7 @@ export default function Hero() {
       id="top"
       className="relative flex min-h-screen flex-col justify-between overflow-hidden px-6 sm:px-8 lg:px-12 pt-28 pb-10"
     >
-      {/* Animated accent beams - desktop only */}
-      {!isMobile && (
+      {/* Animated accent beams */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           initial={{ scaleX: 0, opacity: 0 }}
@@ -176,7 +161,6 @@ export default function Hero() {
           className="absolute top-0 bottom-0 left-[15%] w-px origin-top bg-gradient-to-b from-accent/10 via-glow-purple/10 to-transparent"
         />
       </div>
-      )}
 
       <motion.div
         style={{ y: yParallax, opacity: opacityFade, scale }}
@@ -197,12 +181,12 @@ export default function Hero() {
           </span>
         </motion.div>
 
-        {/* Name - character-by-character reveal (simplified on mobile) */}
+        {/* Name - character-by-character reveal */}
         <h1 className="mt-10 text-display max-w-5xl overflow-hidden">
-          <CharReveal text="SHASHANK" className="gradient-text" delay={0.6} isMobile={isMobile} />
+          <CharReveal text="SHASHANK" className="gradient-text" delay={0.6} />
           <br className="sm:hidden" />
           {' '}
-          <CharReveal text="SINGH" className="text-primary" delay={1.0} isMobile={isMobile} />
+          <CharReveal text="SINGH" className="text-primary" delay={1.0} />
         </h1>
 
         {/* Role with scramble */}
